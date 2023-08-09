@@ -9,29 +9,33 @@ const connectDB = require('./config/connection');
 const port = process.env.PORT || 3001;
 // Note: all database queries will got to the endpoint /graphql and parsed with apollo-server
 // all non database related requests are sent directly to regular express endpoints
-connectDB(); // Connect to MongoDB
 
-const server = new ApolloServer({ typeDefs, resolvers });
 
-const app = express();
-
-// applies the Apollo server as middleware to the Express app. 
-// This allows the app to handle GraphQL requests.
 async function startServer() {
+  try {
+    await connectDB(); // Connect to MongoDB
+
+    const server = new ApolloServer({ typeDefs, resolvers });
+
+    const app = express();
+
+    // Applies the Apollo server as middleware to the Express app. 
+    // This allows the app to handle GraphQL requests.
     await server.start();
     server.applyMiddleware({ app });
+
+    app.get('/', (req, res) => {
+      res.send('Hello World');
+    });
+
+    app.listen(port, () => {
+      console.log(`Server started at http://localhost:${port}${server.graphqlPath}`);
+    });
+  } catch (error) {
+    console.error('Error starting the server:', error);
   }
-  
-  startServer().catch((err) => {
-    console.error(err);
-  });
+}
 
-app.get('/', (req, res) => {
-    res.send('Hello World');
-});
-
-app.listen(port, () => {
-    console.log(`Listening at http://localhost:${port}${server.graphqlPath}`);
-});
+startServer();
 
 // PORT 80 or 8080 is the default PORT
